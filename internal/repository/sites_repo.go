@@ -15,7 +15,7 @@ func (r *SitesRepo) Create(userID int, url string) error {
 	return err
 }
 
-func (r *SitesRepo) GetByUserID(userID int) ([]models.Site, error) {
+func (r *SitesRepo) GetUsersSite(userID int) ([]models.Site, error) {
 	var sites []models.Site
 	err := r.DB.Select(&sites, "SELECT * FROM sites WHERE user_id=$1", userID)
 	return sites, err

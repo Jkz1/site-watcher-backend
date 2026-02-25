@@ -3,9 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"site-checker-backend/internal/models"
 	"site-checker-backend/internal/repository"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,7 +40,14 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{"message": "Welcome " + user.Username})
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Expires in 24h
+	})
+
+	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+
+	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
 
 func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {

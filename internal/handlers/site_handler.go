@@ -12,8 +12,19 @@ type SiteHandler struct {
 }
 
 func (h *SiteHandler) CreateSite(w http.ResponseWriter, r *http.Request) {
-	// Implementation for creating a site
 	var req models.Site
 	json.NewDecoder(r.Body).Decode(&req)
+	userID := r.Context().Value("user_id").(int)
+	err := h.Repo.Create(userID, req.URL)
+	if err != nil {
+		http.Error(w, "Failed to create site", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
 
+func (h *SiteHandler) GetMySites(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("user_id").(int)
+	sites, _ := h.Repo.GetUsersSite(userID)
+	json.NewEncoder(w).Encode(sites)
 }

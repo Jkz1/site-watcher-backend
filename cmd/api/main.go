@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"site-checker-backend/internal/handlers"
+	auth_middleware "site-checker-backend/internal/middleware"
 	"site-checker-backend/internal/repository"
 
 	"github.com/jmoiron/sqlx"
@@ -41,12 +42,16 @@ func main() {
 
 	repo := &repository.UserRepo{DB: db}
 	h := &handlers.UserHandler{Repo: repo}
+	sitesRepo := &repository.SitesRepo{DB: db}
+	siteHandler := &handlers.SiteHandler{Repo: sitesRepo}
 	mux := http.NewServeMux()
 	log.Println("Database schema initialized.")
 	// Routes
 	mux.HandleFunc("POST /register", h.Register)
 	mux.HandleFunc("POST /login", h.Login)
 	mux.HandleFunc("PUT /password", h.ChangePassword)
+	mux.HandleFunc("GET /sites", auth_middleware.AuthMiddleware(siteHandler.GetMySites))
+	mux.HandleFunc("POST /sites", auth_middleware.AuthMiddleware(siteHandler.CreateSite))
 	log.Println("Server running on :8080")
 	http.ListenAndServe(":8080", mux)
 }
