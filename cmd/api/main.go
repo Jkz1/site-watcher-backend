@@ -41,12 +41,22 @@ func main() {
 		is_active BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`)
+	db.MustExec(`
+	CREATE TABLE health_checks (
+		id SERIAL PRIMARY KEY,
+		site_id INT REFERENCES sites(id) ON DELETE CASCADE,
+		status_code INT,
+		latency_ms INT,
+		checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`)
 
 	repo := &repository.UserRepo{DB: db}
 	h := &handlers.UserHandler{Repo: repo}
 	sitesRepo := &repository.SitesRepo{DB: db}
 	siteHandler := &handlers.SiteHandler{Repo: sitesRepo}
+
 	monitor.StartWorker(sitesRepo)
+	monitor.StartJanitor(sitesRepo)
 	mux := http.NewServeMux()
 	log.Println("Database schema initialized.")
 	// Routes
@@ -55,6 +65,8 @@ func main() {
 	mux.HandleFunc("PUT /password", h.ChangePassword)
 	mux.HandleFunc("GET /sites", auth_middleware.AuthMiddleware(siteHandler.GetMySites))
 	mux.HandleFunc("POST /sites", auth_middleware.AuthMiddleware(siteHandler.CreateSite))
+	mux.HandleFunc("PUT /sites/history", auth_middleware.AuthMiddleware(siteHandler.GetHistory))
+	mux.HandleFunc("PUT /sites/activated", auth_middleware.AuthMiddleware(sitehandler))
 	log.Println("Server running on :8080")
 	http.ListenAndServe(":8080", mux)
 }

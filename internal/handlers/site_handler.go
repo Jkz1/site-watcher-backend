@@ -29,26 +29,26 @@ func (h *SiteHandler) GetMySites(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(sites)
 }
 
-func (h *SiteHandler) ToggleMonitoring(w http.ResponseWriter, r *http.Request) {
-	// 1. Get UserID from Middleware context
+func (h *SiteHandler) UpdateActiveStatus(w http.ResponseWriter, r *http.Request) {
+	var req models.UpdateActiveRequest
+	json.NewDecoder(r.Body).Decode(&req)
 	userID := r.Context().Value("user_id").(int)
-
-	// 2. Get SiteID (Assuming it's a URL param or JSON body)
-	var req struct {
-		SiteID int  `json:"site_id"`
-		Active bool `json:"active"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
-	// 3. Update the DB
-	err := h.Repo.UpdateActiveStatus(req.SiteID, userID, req.Active)
+	err := h.Repo.UpdateActiveStatus(userID, req.SiteID, req.IsActive)
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "Failed to update site status", http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *SiteHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
+	var req models.HistoryRequest
+	json.NewDecoder(r.Body).Decode(&req)
+	userID := r.Context().Value("user_id").(int)
+	sites, err := h.Repo.GetHistoryBySite(userID, req.SiteID)
+	if err != nil {
+		http.Error(w, "Failed to get history", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(sites)
 }

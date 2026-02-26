@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
-
 	"site-checker-backend/internal/models"
 	"site-checker-backend/internal/repository"
+	"time"
 )
 
 func StartWorker(repo *repository.SitesRepo) {
 	ticker := time.NewTicker(60 * time.Second)
-
 	go func() {
 		for range ticker.C {
 			sites, err := repo.GetAllActive()
@@ -51,4 +49,23 @@ func pingSite(url string) (int, int) {
 
 	latency := int(time.Since(start).Milliseconds())
 	return resp.StatusCode, latency
+}
+
+func StartJanitor(repo *repository.SitesRepo) {
+	// Check once every 24 hours
+	ticker := time.NewTicker(24 * time.Hour)
+
+	go func() {
+		for range ticker.C {
+			log.Println("[Janitor] Starting daily database cleanup...")
+
+			rows, err := repo.CleanOldLogs()
+			if err != nil {
+				log.Printf("[Janitor] Error cleaning logs: %v", err)
+				continue
+			}
+
+			log.Printf("[Janitor] Successfully deleted %d old health check records.", rows)
+		}
+	}()
 }

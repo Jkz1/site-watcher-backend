@@ -13,3 +13,8 @@ type Site struct {
 	IsActive   *bool      `db:"is_active" json:"is_active"`
 	CreatedAt  *time.Time `db:"created_at" json:"created_at"`
 }
+
+type UpdateActiveRequest struct {
+	SiteID   int  `json:"site_id"`
+	IsActive bool `json:"is_active"`
+}
