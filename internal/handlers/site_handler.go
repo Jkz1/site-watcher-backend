@@ -28,3 +28,27 @@ func (h *SiteHandler) GetMySites(w http.ResponseWriter, r *http.Request) {
 	sites, _ := h.Repo.GetUsersSite(userID)
 	json.NewEncoder(w).Encode(sites)
 }
+
+func (h *SiteHandler) ToggleMonitoring(w http.ResponseWriter, r *http.Request) {
+	// 1. Get UserID from Middleware context
+	userID := r.Context().Value("user_id").(int)
+
+	// 2. Get SiteID (Assuming it's a URL param or JSON body)
+	var req struct {
+		SiteID int  `json:"site_id"`
+		Active bool `json:"active"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// 3. Update the DB
+	err := h.Repo.UpdateActiveStatus(req.SiteID, userID, req.Active)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"site-checker-backend/internal/handlers"
 	auth_middleware "site-checker-backend/internal/middleware"
+	"site-checker-backend/internal/monitor"
 	"site-checker-backend/internal/repository"
 
 	"github.com/jmoiron/sqlx"
@@ -14,7 +15,8 @@ import (
 )
 
 func main() {
-	godotenv.Load() // Loads .env into OS env
+
+	godotenv.Load()
 
 	connstr := os.Getenv("DATABASE_URL")
 	db, err := sqlx.Connect("postgres", connstr)
@@ -22,15 +24,15 @@ func main() {
 		log.Fatal("DB Connection failed:", err)
 	}
 
-	// Auto-create table
 	db.MustExec(`
 	CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
 		username TEXT UNIQUE NOT NULL,
 		password TEXT NOT NULL
 	);`)
+
 	db.MustExec(`
-	CREATE TABLE sites (
+	CREATE TABLE IF NOT EXISTS sites (
 		id SERIAL PRIMARY KEY,
 		user_id INT REFERENCES users(id) ON DELETE CASCADE, 
 		url TEXT NOT NULL,
@@ -44,6 +46,7 @@ func main() {
 	h := &handlers.UserHandler{Repo: repo}
 	sitesRepo := &repository.SitesRepo{DB: db}
 	siteHandler := &handlers.SiteHandler{Repo: sitesRepo}
+	monitor.StartWorker(sitesRepo)
 	mux := http.NewServeMux()
 	log.Println("Database schema initialized.")
 	// Routes
