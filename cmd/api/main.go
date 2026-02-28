@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	goroutine "site-checker-backend/internal/goroutine"
 	"site-checker-backend/internal/handlers"
 	auth_middleware "site-checker-backend/internal/middleware"
-	"site-checker-backend/internal/monitor"
 	"site-checker-backend/internal/repository"
 
 	"github.com/jmoiron/sqlx"
@@ -55,8 +55,10 @@ func main() {
 	sitesRepo := &repository.SitesRepo{DB: db}
 	siteHandler := &handlers.SiteHandler{Repo: sitesRepo}
 
-	monitor.StartWorker(sitesRepo)
-	monitor.StartJanitor(sitesRepo)
+	goroutine.StartWorker(sitesRepo)
+	goroutine.StartJanitor(sitesRepo)
+	goroutine.StartCleanup(sitesRepo)
+
 	mux := http.NewServeMux()
 	log.Println("Database schema initialized.")
 	// Routes
