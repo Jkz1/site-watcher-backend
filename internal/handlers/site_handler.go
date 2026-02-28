@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"site-checker-backend/internal/models"
 	"site-checker-backend/internal/repository"
@@ -35,6 +36,7 @@ func (h *SiteHandler) UpdateActiveStatus(w http.ResponseWriter, r *http.Request)
 	userID := r.Context().Value("user_id").(int)
 	err := h.Repo.UpdateActiveStatus(userID, req.SiteID, req.IsActive)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to update site status", http.StatusInternalServerError)
 		return
 	}

@@ -42,7 +42,7 @@ func main() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`)
 	db.MustExec(`
-	CREATE TABLE health_checks (
+	CREATE TABLE IF NOT EXISTS health_checks (
 		id SERIAL PRIMARY KEY,
 		site_id INT REFERENCES sites(id) ON DELETE CASCADE,
 		status_code INT,
@@ -66,7 +66,7 @@ func main() {
 	mux.HandleFunc("GET /sites", auth_middleware.AuthMiddleware(siteHandler.GetMySites))
 	mux.HandleFunc("POST /sites", auth_middleware.AuthMiddleware(siteHandler.CreateSite))
 	mux.HandleFunc("PUT /sites/history", auth_middleware.AuthMiddleware(siteHandler.GetHistory))
-	mux.HandleFunc("PUT /sites/activated", auth_middleware.AuthMiddleware(sitehandler))
+	mux.HandleFunc("PUT /sites/activated", auth_middleware.AuthMiddleware(siteHandler.UpdateActiveStatus))
 	log.Println("Server running on :8080")
 	http.ListenAndServe(":8080", mux)
 }
