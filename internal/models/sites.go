@@ -13,7 +13,9 @@ type Site struct {
 	IsActive   *bool      `db:"is_active" json:"is_active"`
 	CreatedAt  *time.Time `db:"created_at" json:"created_at"`
 }
-
+type CreateSiteRequest struct {
+	URL string `json:"url" example:"https://example.com"`
+}
 type UpdateActiveRequest struct {
 	SiteID   int  `json:"site_id"`
 	IsActive bool `json:"is_active"`

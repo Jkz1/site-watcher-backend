@@ -1,5 +1,36 @@
-basePath: /api/v1
+basePath: /
 definitions:
+  models.AuthRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.CreateSiteRequest:
+    properties:
+      url:
+        example: https://example.com
+        type: string
+    type: object
+  models.HealthCheck:
+    properties:
+      checked_at:
+        type: string
+      id:
+        type: integer
+      latency_ms:
+        type: integer
+      site_id:
+        type: integer
+      status_code:
+        type: integer
+    type: object
+  models.HistoryRequest:
+    properties:
+      site_id:
+        type: integer
+    type: object
   models.Site:
     properties:
       created_at:
@@ -17,34 +48,275 @@ definitions:
       user_id:
         type: integer
     type: object
+  models.UpdateActiveRequest:
+    properties:
+      is_active:
+        type: boolean
+      site_id:
+        type: integer
+    type: object
+  models.UpdatePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
 host: localhost:8080
 info:
-  contact:
-    email: jjikky3@gmail.com
-    name: Jikky
-    url: linkedin.com/in/jikky-jikky-61603a30b
-  description: Backend API for monitoring website health and performance.
-  termsOfService: http://swagger.io/terms/
-  title: Site Checker API
-  version: "1.0"
+  contact: {}
+  description: API for managing user sites with JWT authentication.
+  title: My Site Manager API
+  version: "1.1"
 paths:
-  /sites:
+  /login:
     post:
       consumes:
       - application/json
-      description: Creates a new site for the authenticated user
+      description: Authenticates a user and returns a JWT token valid for 24 hours.
+      parameters:
+      - description: Login Credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'returns {''token'': ''jwt_token_here''}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Invalid credentials
+          schema:
+            type: string
+      summary: User Login
+      tags:
+      - auth
+  /password:
+    put:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's password. Requires the old password
+        for verification and a valid JWT.
+      parameters:
+      - description: Old and New Password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdatePasswordRequest'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Password updated
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized - Missing token or incorrect old password
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Change user password
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with a username and password. The password
+        will be hashed using bcrypt.
+      parameters:
+      - description: User Registration Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Site'
-        "404":
-          description: Not Found
+            type: string
+        "400":
+          description: Invalid request body
           schema:
             type: string
-      summary: Create a new site by user
+        "409":
+          description: Username already taken
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Register a new user
+      tags:
+      - auth
+  /sites:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all sites associated with the authenticated
+        user's ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved list of sites
+          schema:
+            items:
+              $ref: '#/definitions/models.Site'
+            type: array
+        "401":
+          description: Unauthorized - Invalid or missing JWT
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get all sites for current user
       tags:
       - sites
+    post:
+      consumes:
+      - application/json
+      description: Creates a new site record. Requires a valid JWT in the Authorization
+        header.
+      parameters:
+      - description: Site URL
+        in: body
+        name: site
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateSiteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Failed to create site
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new site
+      tags:
+      - sites
+  /sites/activated:
+    put:
+      consumes:
+      - application/json
+      description: Toggles the 'is_active' state of a specific site owned by the authenticated
+        user.
+      parameters:
+      - description: Site ID and new Active status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateActiveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized - Missing or invalid JWT
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error - Database update failed
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update site active status
+      tags:
+      - sites
+  /sites/history:
+    put:
+      consumes:
+      - application/json
+      description: Retrieves all historical status checks for a specific site. Requires
+        a SiteID in the request body.
+      parameters:
+      - description: History Filter (contains site_id)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.HistoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of historical check results
+          schema:
+            items:
+              $ref: '#/definitions/models.HealthCheck'
+            type: array
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get check history for a site
+      tags:
+      - sites
+securityDefinitions:
+  ApiKeyAuth:
+    description: Type 'Bearer <your-token>' to authenticate
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
