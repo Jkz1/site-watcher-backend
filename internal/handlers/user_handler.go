@@ -18,9 +18,11 @@ type UserHandler struct {
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req models.AuthRequest
-	json.NewDecoder(r.Body).Decode(&req)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-	// Hash password before saving
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 
 	user := &models.User{Username: req.Username, Password: string(hashed)}
@@ -33,7 +35,10 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req models.AuthRequest
-	json.NewDecoder(r.Body).Decode(&req)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
 	user, err := h.Repo.GetByUsername(req.Username)
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)) != nil {
@@ -52,7 +57,10 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	var req models.UpdatePasswordRequest
-	json.NewDecoder(r.Body).Decode(&req)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
 	user, err := h.Repo.GetByUsername(req.Username)
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.OldPassword)) != nil {

@@ -1,0 +1,50 @@
+basePath: /api/v1
+definitions:
+  models.Site:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_status:
+        type: integer
+      latency_ms:
+        type: integer
+      url:
+        type: string
+      user_id:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: jjikky3@gmail.com
+    name: Jikky
+    url: linkedin.com/in/jikky-jikky-61603a30b
+  description: Backend API for monitoring website health and performance.
+  termsOfService: http://swagger.io/terms/
+  title: Site Checker API
+  version: "1.0"
+paths:
+  /sites:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new site for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Site'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Create a new site by user
+      tags:
+      - sites
+swagger: "2.0"
