@@ -8,6 +8,7 @@ import (
 	"site-checker-backend/internal/repository"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,6 +16,9 @@ import (
 type UserHandler struct {
 	Repo *repository.UserRepo
 }
+
+var validateUser = validator.New()
+
 // Register godoc
 // @Summary      Register a new user
 // @Description  Creates a new user account with a username and password. The password will be hashed using bcrypt.
@@ -33,7 +37,10 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
+	if err := validateUser.Struct(req); err != nil {
+		http.Error(w, "Validation failed: "+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 
 	user := &models.User{Username: req.Username, Password: string(hashed)}
@@ -43,6 +50,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 }
+
 // Login godoc
 // @Summary      User Login
 // @Description  Authenticates a user and returns a JWT token valid for 24 hours.
@@ -60,7 +68,10 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
+	if err := validateUser.Struct(req); err != nil {
+		http.Error(w, "Validation failed: "+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
 	user, err := h.Repo.GetByUsername(req.Username)
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)) != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
@@ -79,6 +90,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
 }
+
 // ChangePassword godoc
 // @Summary      Change user password
 // @Description  Updates the authenticated user's password. Requires the old password for verification and a valid JWT.
@@ -97,6 +109,10 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("user_id").(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if err := validateUser.Struct(req); err != nil {
+		http.Error(w, "Validation failed: "+err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -6,11 +6,15 @@ import (
 	"net/http"
 	"site-checker-backend/internal/models"
 	"site-checker-backend/internal/repository"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type SiteHandler struct {
 	Repo *repository.SitesRepo
 }
+
+var validateSite = validator.New()
 
 // CreateSite godoc
 // @Summary      Create a new site
@@ -31,6 +35,10 @@ func (h *SiteHandler) CreateSite(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+	if err := validateSite.Struct(req); err != nil {
+		http.Error(w, "Validation failed: "+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
 	userID, ok := r.Context().Value("user_id").(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -43,6 +51,7 @@ func (h *SiteHandler) CreateSite(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 }
+
 // GetMySites godoc
 // @Summary      Get all sites for current user
 // @Description  Retrieves a list of all sites associated with the authenticated user's ID.
@@ -61,14 +70,15 @@ func (h *SiteHandler) GetMySites(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sites, err := h.Repo.GetUsersSite(userID)
-    if err != nil {
-        http.Error(w, "Failed to retrieve sites", http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(w, "Failed to retrieve sites", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(sites)
 }
+
 // UpdateActiveStatus godoc
 // @Summary      Update site active status
 // @Description  Toggles the 'is_active' state of a specific site owned by the authenticated user.
@@ -88,6 +98,10 @@ func (h *SiteHandler) UpdateActiveStatus(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+	if err := validateSite.Struct(req); err != nil {
+		http.Error(w, "Validation failed: "+err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
 	userID, ok := r.Context().Value("user_id").(int)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -101,6 +115,7 @@ func (h *SiteHandler) UpdateActiveStatus(w http.ResponseWriter, r *http.Request)
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
 // GetHistory godoc
 // @Summary      Get check history for a site
 // @Description  Retrieves all historical status checks for a specific site. Requires a SiteID in the request body.
@@ -118,6 +133,10 @@ func (h *SiteHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	var req models.HistoryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	if err := validateSite.Struct(req); err != nil {
+		http.Error(w, "Validation failed: "+err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
 	userID, ok := r.Context().Value("user_id").(int)

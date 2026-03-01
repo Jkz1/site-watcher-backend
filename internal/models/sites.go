@@ -14,9 +14,9 @@ type Site struct {
 	CreatedAt  *time.Time `db:"created_at" json:"created_at"`
 }
 type CreateSiteRequest struct {
-	URL string `json:"url" example:"https://example.com"`
+	URL string `json:"url" example:"https://example.com" validate:"required,min=6"`
 }
 type UpdateActiveRequest struct {
-	SiteID   int  `json:"site_id"`
-	IsActive bool `json:"is_active"`
+	SiteID   int  `json:"site_id" validate:"required"`
+	IsActive bool `json:"is_active" validate:"required"`
 }

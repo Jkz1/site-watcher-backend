@@ -11,5 +11,5 @@ type HealthCheck struct {
 }
 
 type HistoryRequest struct {
-	SiteID int `json:"site_id"`
+	SiteID int `json:"site_id" validate:"required"`
 }
