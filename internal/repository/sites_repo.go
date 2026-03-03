@@ -50,20 +50,18 @@ func (r *SitesRepo) UpdateActiveStatus(userID int, siteID int, status bool) erro
 
 	return err
 }
+
 func (r *SitesRepo) CleanOldLogs() (int64, error) {
-	// Delete logs where checked_at is older than 30 days
 	result, err := r.DB.Exec("DELETE FROM health_checks WHERE checked_at < NOW() - INTERVAL '30 days'")
 	if err != nil {
 		return 0, err
 	}
 
-	// Return how many rows were deleted for logging purposes
 	return result.RowsAffected()
 }
+
 func (r *SitesRepo) GetHistoryBySite(userID int, siteID int) ([]models.HealthCheck, error) {
 	var history []models.HealthCheck
-
-	// Select automatically maps the columns to the struct tags
 	query := `SELECT * FROM health_checks WHERE site_id = $1 AND site_id IN (SELECT id FROM sites WHERE user_id = $2) ORDER BY checked_at DESC LIMIT 100`
 	err := r.DB.Select(&history, query, siteID, userID)
 

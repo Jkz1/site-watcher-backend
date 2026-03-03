@@ -18,7 +18,7 @@ import (
 )
 
 // @title           My Site Manager API
-// @version         1.1
+// @version         1.2
 // @description     API for managing user sites with JWT authentication.
 // @host            localhost:8080
 // @BasePath        /
@@ -54,6 +54,7 @@ func main() {
 		is_active BOOLEAN DEFAULT TRUE,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`)
+
 	db.MustExec(`
 	CREATE TABLE IF NOT EXISTS health_checks (
 		id SERIAL PRIMARY KEY,

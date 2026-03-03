@@ -37,13 +37,13 @@ func StartWorker(repo *repository.SitesRepo) {
 
 func pingSite(url string) (int, int) {
 	client := http.Client{
-		Timeout: 10 * time.Second, // Don't wait forever
+		Timeout: 10 * time.Second,
 	}
 
 	start := time.Now()
 	resp, err := client.Get(url)
 	if err != nil {
-		return 0, 0 // 0 means site is unreachable
+		return 0, 0
 	}
 	defer resp.Body.Close()
 
@@ -52,7 +52,6 @@ func pingSite(url string) (int, int) {
 }
 
 func StartJanitor(repo *repository.SitesRepo) {
-	// Check once every 24 hours
 	ticker := time.NewTicker(24 * time.Hour)
 
 	go func() {

@@ -17,13 +17,13 @@ func StartCleanup(db *repository.SitesRepo) {
 
 			result, err := db.DB.Exec(query)
 			if err != nil {
-				log.Printf("Cleanup failed: %v", err)
+				log.Printf("[Janitor] Cleanup failed: %v", err)
 				continue
 			}
 
 			rows, _ := result.RowsAffected()
 			if rows > 0 {
-				log.Printf("Cleanup successful: %d rows removed", rows)
+				log.Printf("[Janitor] Cleanup successful: %d rows removed", rows)
 			}
 		}
 	}()
