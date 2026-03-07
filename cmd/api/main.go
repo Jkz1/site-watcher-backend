@@ -14,6 +14,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -70,11 +71,21 @@ func main() {
 	siteHandler := &handlers.SiteHandler{Repo: sitesRepo}
 
 	goroutine.StartWorker(sitesRepo)
-	goroutine.StartJanitor(sitesRepo)
+	// goroutine.StartJanitor(sitesRepo)
 	goroutine.StartCleanup(sitesRepo)
 
+	// CORS setup
 	mux := http.NewServeMux()
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+		Debug:            true,
+	})
+	handler := c.Handler(mux)
 	log.Println("Database schema initialized.")
+
 	// Routes
 	mux.HandleFunc("POST /register", h.Register)
 	mux.HandleFunc("POST /login", h.Login)
@@ -87,5 +98,5 @@ func main() {
 	// The endpoint to view your documentation
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 	log.Println("Server running on :8080")
-	http.ListenAndServe(":8080", mux)
+	http.ListenAndServe(":8080", handler)
 }
