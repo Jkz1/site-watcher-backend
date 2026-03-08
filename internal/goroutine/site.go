@@ -50,21 +50,3 @@ func pingSite(url string) (int, int) {
 	latency := int(time.Since(start).Milliseconds())
 	return resp.StatusCode, latency
 }
-
-func StartJanitor(repo *repository.SitesRepo) {
-	ticker := time.NewTicker(24 * time.Hour)
-
-	go func() {
-		for range ticker.C {
-			log.Println("[Janitor] Starting daily database cleanup...")
-
-			rows, err := repo.CleanOldLogs()
-			if err != nil {
-				log.Printf("[Janitor] Error cleaning logs: %v", err)
-				continue
-			}
-
-			log.Printf("[Janitor] Successfully deleted %d old health check records.", rows)
-		}
-	}()
-}

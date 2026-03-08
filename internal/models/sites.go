@@ -8,6 +8,7 @@ type Site struct {
 	ID         int        `db:"id" json:"id"`
 	UserID     int        `db:"user_id" json:"user_id"`
 	URL        string     `db:"url" json:"url"`
+	Name       string     `db:"name" json:"name"`
 	LastStatus *int       `db:"last_status" json:"last_status"`
 	LatencyMs  *int       `db:"latency_ms" json:"latency_ms"`
 	IsActive   *bool      `db:"is_active" json:"is_active"`
@@ -15,7 +16,8 @@ type Site struct {
 }
 
 type CreateSiteRequest struct {
-	URL string `json:"url" example:"https://example.com" validate:"required,min=6"`
+	URL  string `json:"url" example:"https://example.com" validate:"required,min=6"`
+	Name string `json:"name" example:"Example Site" validate:"required,min=2,max=100"`
 }
 
 type UpdateActiveRequest struct {

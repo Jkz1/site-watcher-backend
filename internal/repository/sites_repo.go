@@ -10,8 +10,8 @@ type SitesRepo struct {
 	DB *sqlx.DB
 }
 
-func (r *SitesRepo) Create(userID int, url string) error {
-	_, err := r.DB.Exec("INSERT INTO sites (user_id, url, is_active) VALUES ($1, $2, false)", userID, url)
+func (r *SitesRepo) Create(userID int, url string, name string) error {
+	_, err := r.DB.Exec("INSERT INTO sites (user_id, url, is_active, name) VALUES ($1, $2, false, $3)", userID, url, name)
 	return err
 }
 

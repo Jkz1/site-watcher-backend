@@ -50,6 +50,7 @@ func main() {
 		id SERIAL PRIMARY KEY,
 		user_id INT REFERENCES users(id) ON DELETE CASCADE, 
 		url TEXT NOT NULL,
+		name TEXT NOT NULL,
 		last_status INT DEFAULT 0,
 		latency_ms INT DEFAULT 0,
 		is_active BOOLEAN DEFAULT TRUE,
@@ -71,7 +72,6 @@ func main() {
 	siteHandler := &handlers.SiteHandler{Repo: sitesRepo}
 
 	goroutine.StartWorker(sitesRepo)
-	// goroutine.StartJanitor(sitesRepo)
 	goroutine.StartCleanup(sitesRepo)
 
 	// CORS setup
@@ -95,7 +95,7 @@ func main() {
 	mux.HandleFunc("PUT /sites/history", auth_middleware.AuthMiddleware(siteHandler.GetHistory))
 	mux.HandleFunc("PUT /sites/activated", auth_middleware.AuthMiddleware(siteHandler.UpdateActiveStatus))
 
-	// The endpoint to view your documentation
+	// The endpoint to view documentation
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 	log.Println("Server running on :8080")
 	http.ListenAndServe(":8080", handler)

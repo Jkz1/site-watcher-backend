@@ -44,7 +44,7 @@ func (h *SiteHandler) CreateSite(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	err := h.Repo.Create(userID, req.URL)
+	err := h.Repo.Create(userID, req.URL, req.Name)
 	if err != nil {
 		http.Error(w, "Failed to create site", http.StatusInternalServerError)
 		return
@@ -65,6 +65,7 @@ func (h *SiteHandler) CreateSite(w http.ResponseWriter, r *http.Request) {
 // @Router       /sites [get]
 func (h *SiteHandler) GetMySites(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("user_id").(int)
+
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
