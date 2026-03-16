@@ -21,6 +21,6 @@ type CreateSiteRequest struct {
 }
 
 type UpdateActiveRequest struct {
-	SiteID   int  `json:"site_id" validate:"required"`
-	IsActive bool `json:"is_active" validate:"required"`
+	SiteID   int   `json:"site_id" validate:"required"`
+	IsActive *bool `json:"is_active" validate:"required"`
 }

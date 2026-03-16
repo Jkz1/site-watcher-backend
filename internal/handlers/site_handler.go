@@ -108,7 +108,7 @@ func (h *SiteHandler) UpdateActiveStatus(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	err := h.Repo.UpdateActiveStatus(userID, req.SiteID, req.IsActive)
+	err := h.Repo.UpdateActiveStatus(userID, req.SiteID, *req.IsActive)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Failed to update site status", http.StatusInternalServerError)
