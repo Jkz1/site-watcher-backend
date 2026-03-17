@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"site-checker-backend/internal/models"
 
 	"github.com/jmoiron/sqlx"
@@ -29,13 +30,21 @@ func (r *SitesRepo) GetAllActive() ([]models.Site, error) {
 
 func (r *SitesRepo) UpdateSiteStatus(id int, status int, latency int) error {
 	_, err := r.DB.Exec(
-		"UPDATE sites SET last_status=$1, latency_ms=$2, WHERE id=$4",
+		"UPDATE sites SET last_status=$1, latency_ms=$2 WHERE id=$3",
 		status, latency, id,
 	)
+	if err != nil {
+		fmt.Printf("Error occurred while updating site status for site ID %d: %v\n", id, err)
+		return err
+	}
 	_, err = r.DB.Exec(
 		"INSERT INTO health_checks (site_id, status_code, latency_ms) VALUES ($1, $2, $3)",
 		id, status, latency,
 	)
+	if err != nil {
+		fmt.Printf("Error occurred while inserting health check for site ID %d: %v\n", id, err)
+		return err
+	}
 	return err
 }
 
@@ -47,7 +56,6 @@ func (r *SitesRepo) UpdateActiveStatus(userID int, siteID int, status bool) erro
 	if err != nil {
 		return err
 	}
-
 	return err
 }
 

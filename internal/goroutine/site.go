@@ -27,7 +27,11 @@ func StartWorker(repo *repository.SitesRepo) {
 			for _, site := range sites {
 				go func(s models.Site) {
 					status, latency := pingSite(s.URL)
-					repo.UpdateSiteStatus(s.ID, status, latency)
+					err := repo.UpdateSiteStatus(s.ID, status, latency)
+					if err != nil {
+						fmt.Printf("Error updating site status for site ID %d: %v", s.ID, err)
+					}
+
 					fmt.Println("pinged", s.URL, "status:", status, "latency:", latency, "ms")
 				}(site)
 			}
@@ -43,6 +47,7 @@ func pingSite(url string) (int, int) {
 	start := time.Now()
 	resp, err := client.Get(url)
 	if err != nil {
+		fmt.Printf("Error occurred while pinging %s: %v\n", url, err)
 		return 0, 0
 	}
 	defer resp.Body.Close()
