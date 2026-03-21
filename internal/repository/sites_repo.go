@@ -56,6 +56,7 @@ func (r *SitesRepo) UpdateActiveStatus(userID int, siteID int, status bool) erro
 	if err != nil {
 		return err
 	}
+	fmt.Println("Success update status to ", status)
 	return err
 }
 
